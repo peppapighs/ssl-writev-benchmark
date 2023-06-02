@@ -85,7 +85,7 @@ void ConfigureContext(SSL_CTX *ctx) {
     }
 }
 
-void Run() {
+void BenchWriteSpeed() {
     SSL_CTX *ctx = CreateContext();
     ConfigureContext(ctx);
 
@@ -103,59 +103,55 @@ void Run() {
     std::cerr << "Connected with " << SSL_get_cipher(ssl) << " encryption"
               << std::endl;
 
-    char buf[BUFFER_SIZE];
+    for (auto &name : testNames) {
+        auto &testCase = testCases.at(name);
+        struct iovec *iov = new struct iovec[testCase.size()];
 
-    std::mt19937 gen(RANDOM_SEED);
-    std::default_random_engine engine(gen());
-    std::uniform_int_distribution<int> dist(MIN_PACKET_SIZE, MAX_PACKET_SIZE);
+        std::vector<int64_t> writeTimes;
+        writeTimes.reserve(NUM_ITER);
+        for (size_t i = 0; i < NUM_ITER; i++) {
+            for (size_t j = 0; j < testCase.size(); j++) {
+                iov[j].iov_base = malloc(testCase[j]);
+                iov[j].iov_len = testCase[j];
+            }
 
-    size_t totalLen = 0;
-    struct iovec iov[NUM_IOV] = {0};
+            Clock clock;
+            for (size_t j = 0; j < testCase.size(); j++)
+                SSL_write(ssl, iov[j].iov_base, iov[j].iov_len);
+            writeTimes.push_back(clock.GetElapsedNanoseconds());
 
-    while (1) {
-        if (!SSL_read(ssl, buf, BUFFER_SIZE))
-            continue;
-        if (strcmp(buf, "start") == 0)
-            break;
+            for (size_t j = 0; j < testCase.size(); j++)
+                free(iov[j].iov_base);
+        }
+        SaveStats("SSL_write()  " + name, writeTimes);
+
+        std::vector<int64_t> writevTimes;
+        writevTimes.reserve(NUM_ITER);
+        size_t written;
+        for (size_t i = 0; i < NUM_ITER; i++) {
+            for (size_t j = 0; j < testCase.size(); j++) {
+                iov[j].iov_base = malloc(testCase[j]);
+                iov[j].iov_len = testCase[j];
+            }
+
+            Clock clock;
+            SSL_writev(ssl, iov, testCase.size(), &written);
+            writeTimes.push_back(clock.GetElapsedNanoseconds());
+
+            for (size_t j = 0; j < testCase.size(); j++)
+                free(iov[j].iov_base);
+        }
+        SaveStats("SSL_writev() " + name, writeTimes);
+
+        free(iov);
     }
 
-    size_t written;
-    std::vector<int64_t> times;
-    for (int i = 0; i < NUM_PACKETS; i += NUM_IOV) {
-        for (int j = 0; j < NUM_IOV; j++) {
-            iov[j].iov_len = dist(engine);
-            iov[j].iov_base = malloc(iov[j].iov_len);
-            totalLen += iov[j].iov_len;
-        }
-
-        Clock clock;
-#if NUM_IOV == 1
-        SSL_write(ssl, iov[0].iov_base, iov[0].iov_len);
-#else
-        SSL_writev(ssl, iov, NUM_IOV, &written);
-#endif
-
-        if (SSL_read(ssl, buf, BUFFER_SIZE) < 0) {
-            std::cerr << "Error reading from socket" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        auto elapsed = clock.GetElapsedNanoseconds();
-        times.emplace_back(elapsed / NUM_IOV);
-
-        for (int j = 0; j < NUM_IOV; j++)
-            free(iov[j].iov_base);
-
-#if FLUSH_CACHE
-        ClearCache();
-#endif
+    std::vector<std::string> toPrint;
+    for (auto &name : testNames) {
+        toPrint.push_back("SSL_write()  " + name);
+        toPrint.push_back("SSL_writev() " + name);
     }
-    SaveStats(STAT_NAME, times);
-
-    std::cout << "Number of packets: " << NUM_PACKETS << std::endl;
-    std::cout << "Number of packets per call: " << NUM_IOV << std::endl;
-    std::cout << "Total number of bytes sent: " << totalLen << std::endl;
-
-    PrintStats({STAT_NAME});
+    PrintStats(toPrint);
 
     SSL_free(ssl);
     close(sfd);

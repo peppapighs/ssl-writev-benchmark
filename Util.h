@@ -19,7 +19,6 @@
 using namespace boost::accumulators;
 
 constexpr size_t numDiscard = 10000;
-constexpr size_t colWidth = 12;
 
 std::array<std::string, 5> statNames = {"min", "50_pct", "90_pct", "99_pct",
                                         "999_pct"};
@@ -58,25 +57,41 @@ void SaveStats(const std::string &name, std::vector<int64_t> &times) {
         result[i] = statFuncs[statNames[i]]();
 }
 
+size_t NameWidth() {
+    size_t width = 0;
+    for (auto &name : names)
+        width = std::max(width, name.size());
+    return width;
+}
+
+size_t StatWidth(const std::string &statName) {
+    size_t width = 0;
+    auto ind =
+        std::distance(statNames.begin(),
+                      std::find(statNames.begin(), statNames.end(), statName));
+    for (auto &result : results)
+        width = std::max(width, std::to_string(result[ind]).size());
+    return width;
+}
+
 void PrintStats(const std::vector<std::string> &toPrint) {
-    std::cout << fmt::format("| {:<{}} |", "Value", colWidth);
+    std::cout << fmt::format("| {:<{}} |", "Value", NameWidth());
     for (auto &name : statNames)
-        std::cout << fmt::format(" {:<{}} |", name, colWidth);
+        std::cout << fmt::format(" {:<{}} |", name, StatWidth(name));
     std::cout << std::endl;
 
-    std::cout << fmt::format("| {} |", std::string(colWidth, '-'));
+    std::cout << fmt::format("| {} |", std::string(NameWidth(), '-'));
     for (auto &name : statNames)
-        std::cout << fmt::format(" {} |", std::string(colWidth, '-'));
+        std::cout << fmt::format(" {} |", std::string(StatWidth(name), '-'));
     std::cout << std::endl;
 
     for (size_t i = 0; i < toPrint.size(); i++) {
-        std::cout << fmt::format("| {:<{}} |", toPrint[i], colWidth);
+        std::cout << fmt::format("| {:<{}} |", toPrint[i], NameWidth());
         auto ind = std::distance(
             names.begin(), std::find(names.begin(), names.end(), toPrint[i]));
         for (size_t j = 0; j < statNames.size(); j++)
-            std::cout << fmt::format(" {:<{}} |",
-                                     std::round(results[ind][j] * 1000) / 1000,
-                                     colWidth);
+            std::cout << fmt::format(" {:<{}} |", results[ind][j],
+                                     StatWidth(statNames[j]));
         std::cout << std::endl;
     }
     std::cout << std::endl;
