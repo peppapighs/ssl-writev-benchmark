@@ -1,3 +1,3 @@
 #include "Client.h"
 
-int main() { Client::Run(); }
+int main() { Client::BenchWriteSpeed(); }

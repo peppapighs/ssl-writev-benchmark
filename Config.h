@@ -1,20 +1,39 @@
+#pragma once
+
+#include <map>
+#include <string>
+#include <vector>
+
 /*
  * This file contains the configuration parameters for the application.
  */
 
-// Name of this benchmark to be printed.
-#define STAT_NAME "SSL_writev()"
 // Port to listen on.
 #define PORT 4433
-// Random seed for the PRNG.
-#define RANDOM_SEED 42
-// Number of packets to send.
-#define NUM_PACKETS (1 << 18)
-// Number of packets to send in each writev call. Set to 1 to use SSL_write()
-// instead.
-#define NUM_IOV (1 << 1)
-// Number of bytes to send in each packet.
-#define MIN_PACKET_SIZE 200
-#define MAX_PACKET_SIZE 250
-// Enable cache flushing.
-#define FLUSH_CACHE 0
+
+// Number of iterations for each test case.
+#define NUM_ITER 200000
+
+// Test Cases
+const std::vector<std::string> testNames = {
+    "[50]",
+    "[300]",
+    "[5000]",
+    "[100 + 50]",
+    "[50 + 300]",
+    "[2000 + 1000]",
+    "[100 + 50 + 100]",
+    "[50 + 300 + 100]",
+    "[1000 + 3000 + 2000]",
+};
+const std::map<std::string, std::vector<size_t>> testCases = {
+    {"[50]", {50}},
+    {"[300]", {300}},
+    {"[5000]", {5000}},
+    {"[100 + 50]", {100, 50}},
+    {"[50 + 300]", {50, 300}},
+    {"[2000 + 1000]", {2000, 1000}},
+    {"[100 + 50 + 100]", {100, 50, 100}},
+    {"[50 + 300 + 100]", {50, 300, 100}},
+    {"[1000 + 3000 + 2000]", {1000, 3000, 2000}},
+};

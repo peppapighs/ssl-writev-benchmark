@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Config.h"
-#include "Util.h"
 
 #include <arpa/inet.h>
 #include <iostream>
@@ -97,29 +96,14 @@ void Run() {
     if (SSL_accept(ssl) <= 0)
         ERR_print_errors_fp(stderr);
 
-    const char startMsg[] = "start";
     char buf[BUFFER_SIZE];
-
-    SSL_write(ssl, startMsg, sizeof(startMsg));
-
-    size_t totalLen = 0;
-    for (int i = 0; i < NUM_PACKETS / NUM_IOV; i++) {
+    while (1) {
         int len = SSL_read(ssl, buf, sizeof(buf));
         if (len <= 0) {
             std::cerr << "SSL_read failed: " << len << std::endl;
             exit(EXIT_FAILURE);
         }
-        SSL_write(ssl, "OK", sizeof("OK"));
-#if FLUSH_CACHE
-        ClearCache();
-#endif
-
-        totalLen += len;
     }
-
-    std::cout << "Number of packets: " << NUM_PACKETS << std::endl;
-    std::cout << "Number of packets per call: " << NUM_IOV << std::endl;
-    std::cout << "Total number of bytes received: " << totalLen << std::endl;
 
     SSL_shutdown(ssl);
     SSL_free(ssl);
