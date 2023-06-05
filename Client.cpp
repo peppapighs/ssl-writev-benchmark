@@ -1,3 +1,9 @@
 #include "Client.h"
 
-int main() { Client::BenchWriteSpeed(); }
+int main() {
+#ifndef BENCH_SINGLE_WRITE
+    Client::BenchWriteSpeed();
+#else
+    Client::BenchSingleWrite();
+#endif
+}

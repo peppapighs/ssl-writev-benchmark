@@ -15,6 +15,11 @@ add_executable(Client ${PROJECT_SOURCE_DIR}/Client.cpp)
 target_include_directories(Client PRIVATE ${PROJECT_SOURCE_DIR} /usr/local/include)
 target_link_libraries(Client PRIVATE Boost::headers fmt /usr/local/lib64/libssl.so /usr/local/lib64/libcrypto.so)
 
+add_executable(Client_SingleWrite ${PROJECT_SOURCE_DIR}/Client.cpp)
+set_target_properties(Client_SingleWrite PROPERTIES COMPILE_FLAGS "-DBENCH_SINGLE_WRITE")
+target_include_directories(Client_SingleWrite PRIVATE ${PROJECT_SOURCE_DIR} /usr/local/include)
+target_link_libraries(Client_SingleWrite PRIVATE Boost::headers fmt /usr/local/lib64/libssl.so /usr/local/lib64/libcrypto.so)
+
 add_executable(Server ${PROJECT_SOURCE_DIR}/Server.cpp)
 target_include_directories(Server PRIVATE ${PROJECT_SOURCE_DIR} /usr/local/include)
 target_link_libraries(Server PRIVATE Boost::headers fmt /usr/local/lib64/libssl.so /usr/local/lib64/libcrypto.so)

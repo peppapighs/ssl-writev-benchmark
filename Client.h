@@ -111,7 +111,7 @@ void BenchWriteSpeed() {
         writeTimes.reserve(NUM_ITER);
         for (size_t i = 0; i < NUM_ITER; i++) {
             for (size_t j = 0; j < testCase.size(); j++) {
-                iov[j].iov_base = malloc(testCase[j]);
+                iov[j].iov_base = calloc(testCase[j], sizeof(char));
                 iov[j].iov_len = testCase[j];
             }
 
@@ -130,7 +130,7 @@ void BenchWriteSpeed() {
         size_t written;
         for (size_t i = 0; i < NUM_ITER; i++) {
             for (size_t j = 0; j < testCase.size(); j++) {
-                iov[j].iov_base = malloc(testCase[j]);
+                iov[j].iov_base = calloc(testCase[j], sizeof(char));
                 iov[j].iov_len = testCase[j];
             }
 
@@ -152,6 +152,58 @@ void BenchWriteSpeed() {
         toPrint.push_back("SSL_writev() " + name);
     }
     PrintStats(toPrint);
+
+    SSL_free(ssl);
+    close(sfd);
+    SSL_CTX_free(ctx);
+}
+
+void BenchSingleWrite() {
+    SSL_CTX *ctx = CreateContext();
+    ConfigureContext(ctx);
+
+    SSL *ssl = SSL_new(ctx);
+    const int sfd = CreateConnection("localhost", std::to_string(PORT).c_str());
+    SSL_set_fd(ssl, sfd);
+
+    const int status = SSL_connect(ssl);
+    if (status != 1) {
+        SSL_get_error(ssl, status);
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    std::cerr << "Connected with " << SSL_get_cipher(ssl) << " encryption"
+              << std::endl;
+
+    for (auto &name : testNames) {
+        auto &testCase = testCases.at(name);
+        struct iovec *iov = new struct iovec[testCase.size()];
+
+        for (size_t j = 0; j < testCase.size(); j++) {
+            iov[j].iov_base = calloc(testCase[j], sizeof(char));
+            iov[j].iov_len = testCase[j];
+        }
+
+        for (size_t j = 0; j < testCase.size(); j++)
+            SSL_write(ssl, iov[j].iov_base, iov[j].iov_len);
+
+        for (size_t j = 0; j < testCase.size(); j++)
+            free(iov[j].iov_base);
+
+        size_t written;
+        for (size_t j = 0; j < testCase.size(); j++) {
+            iov[j].iov_base = calloc(testCase[j], sizeof(char));
+            iov[j].iov_len = testCase[j];
+        }
+
+        SSL_writev(ssl, iov, testCase.size(), &written);
+
+        for (size_t j = 0; j < testCase.size(); j++)
+            free(iov[j].iov_base);
+
+        free(iov);
+    }
 
     SSL_free(ssl);
     close(sfd);
