@@ -81,4 +81,4 @@ Using the same encryption and record size as above, a single TLS record takes 29
 
 This result is observed through running `build/Client_SingleWrite` (sending a single iteration of each test case) and using Wireshark to capture the packets.
 
-The decrease in overhead can allow for a higher throughput in the network.
+The decrease in overhead can allow for a higher goodput in the network.
