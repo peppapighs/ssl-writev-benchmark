@@ -14,6 +14,15 @@
 // Number of iterations for each test case.
 #define NUM_ITER 200000
 
+// Randomize the data sent to the server.
+#define RANDOMIZE_DATA 1
+
+// Include benchmark result of combining buffer and calling SSL_write().
+#define BENCH_WRITE_MEMCPY 1
+
+// Flush the record after each write (take a lot longer to run if enabled).
+#define FLUSH_RECORD 0
+
 // Test Cases
 const std::vector<std::string> testNames = {
     "[50]",           "[300]",          "[5000]",
