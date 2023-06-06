@@ -23,6 +23,9 @@
 // Flush the record after each write (take a lot longer to run if enabled).
 #define FLUSH_RECORD 0
 
+// Stats will be saved to this file.
+#define STATS_FILE "results.csv"
+
 // Test Cases
 const std::vector<std::string> testNames = {
     "[50]",           "[300]",          "[5000]",

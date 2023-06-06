@@ -12,6 +12,7 @@
 #include <fmt/core.h>
 
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -95,6 +96,24 @@ void PrintStats(const std::vector<std::string> &toPrint) {
         std::cout << std::endl;
     }
     std::cout << std::endl;
+}
+
+void SaveStatsToCSV(const std::vector<std::string> &toPrint,
+                    const std::string &filename) {
+    std::ofstream file(filename);
+    file << "Value";
+    for (auto &name : statNames)
+        file << ";" << name;
+    file << std::endl;
+
+    for (size_t i = 0; i < toPrint.size(); i++) {
+        file << toPrint[i];
+        auto ind = std::distance(
+            names.begin(), std::find(names.begin(), names.end(), toPrint[i]));
+        for (size_t j = 0; j < statNames.size(); j++)
+            file << ";" << results[ind][j];
+        file << std::endl;
+    }
 }
 
 inline void ClearCache() {
