@@ -103,6 +103,10 @@ void Run() {
             std::cerr << "SSL_read failed: " << len << std::endl;
             exit(EXIT_FAILURE);
         }
+
+#if FLUSH_RECORD
+        SSL_write(ssl, "", 1);
+#endif
     }
 
     SSL_shutdown(ssl);
