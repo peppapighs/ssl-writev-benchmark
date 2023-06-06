@@ -228,6 +228,10 @@ void BenchWriteSpeed() {
     }
     PrintStats(toPrint);
 
+#ifdef STATS_FILE
+    SaveStatsToCSV(toPrint, STATS_FILE);
+#endif
+
     SSL_free(ssl);
     close(sfd);
     SSL_CTX_free(ctx);
