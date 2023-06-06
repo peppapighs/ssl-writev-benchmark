@@ -34,7 +34,7 @@ Benchmark of SSL_writev() implementation
 
 ### Environment
 
-- OS: Ubuntu 22.04.2 LTS x86 | 64
+- OS: Ubuntu 22.04.2 LTS x86_64
 - Kernel: 5.15.0-72-generic
 - CPU: Intel Xeon Gold 5218 (64) @ 3.900GHz
 - GPU: NVIDIA Quadro T1000 Mobile
